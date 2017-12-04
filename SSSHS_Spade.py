@@ -82,12 +82,7 @@ def startSimulation():
 			sleep(0.1)
 			
 			
-'''
-TODO: 
 
-make it work!
-umjesto pozivanja metoda u drugim objektima - salji poruke! Event behaviour ili tako nesto
-'''
 
 class Report( OneShotBehaviour ):
 	''' Reporting behaviour to be added on the fly at the end of simulation with addBehaviour() '''
