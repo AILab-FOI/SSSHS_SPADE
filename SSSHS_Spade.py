@@ -789,6 +789,7 @@ class StorageAgent( TalkingAgent, Storage ):
 			print (" ** BUYER %s > TOTAL ITERATIONS: %d" %(self.name, self.negTimer))
 			print (" ** BUYER %s > ACCEPTED OFFER: %s" %(self.name, received_offer))
 
+			self.currentResourceLevel = self.currentResourceLevel + received_offer[0]
 			print (" ** BUYER %s > New CRL: %d" %(self.name, self.currentResourceLevel))
 
 			self.negTimer = 0
