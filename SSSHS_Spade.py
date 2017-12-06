@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import subprocess
 import sys
 from multiprocessing import Process
-#import threading
 
 from spade.Agent import BDIAgent
 from spade.Behaviour import OneShotBehaviour, EventBehaviour, ACLTemplate, MessageTemplate
@@ -85,6 +84,7 @@ def startSimulation():
 
 class Report( OneShotBehaviour ):
 	''' Reporting behaviour to be added on the fly at the end of simulation with addBehaviour() '''
+	''' Should be used instead of Observer.report() '''
 	
 	def _process( self ):
 		''' Print out the stats of all storages '''
@@ -273,9 +273,7 @@ class StorageAgent( TalkingAgent, Storage ):
 
 	class sendingMessageClass (OneShotBehaviour):
 		def _process (self):
-			pass
-			#print "sendingMessageClass of Storage entered"
-			
+			pass			
 
 	def sendMessage (self, messageToSend, messageReceiver, messageOntology):		
 		msg = ACLMessage()
@@ -288,8 +286,6 @@ class StorageAgent( TalkingAgent, Storage ):
 		msg.setContent( messageToSend )
 		self.send( msg )
 		print "\n-- Storage %s is now sending message: %s to %s (ontology: %s) -->" %(self.storageName, msg.getContent(), messageReceiver, messageOntology)
-		#~ print "-- receiver (full): %s" %receiver
-		#~ print "-- ontology: %s" %messageOntology
 		
 
 	class receiveMessage(EventBehaviour):
@@ -300,15 +296,11 @@ class StorageAgent( TalkingAgent, Storage ):
 			if self.msg:
 				print "%s, got a message:" %self.myAgent.storageName
 				self.msgContent = self.msg.getContent()
-				#print type(self.msgContent)
 				print self.msgContent
 				
 				if "TEST" in self.msgContent:
 					print "It's just a freakin' TEST message"
-					
-				#~ elif isinstance (self.msgContent, int):
-					#~ print "I just got a freebie offer: %d" %self.msgContent
-					
+										
 				else:
 					print "SOME OTHER MESSAGE"				
 			else:
@@ -359,11 +351,7 @@ class StorageAgent( TalkingAgent, Storage ):
 				seller = self.msgContent.partition("<")[1] + self.msgContent.partition("<")[2].partition(">")[0] + self.msgContent.partition(">")[1]
 				print seller
 				print "%%%%%%%%%%%%%%%%%%%%%%%"
-				
-				#~ offer = list(eval(self.msgContent))
-				#~ print offer
-				#~ seller = self.msg.getSender().getName()
-				#~ seller = self.msg.getSender()
+
 				self.myAgent.buying(offer, seller)
 				
 	
@@ -377,21 +365,14 @@ class StorageAgent( TalkingAgent, Storage ):
 				print "\n--> %s has just received NEGOTIATION message from %s:" %(self.myAgent.storageName, self.msg.getSender().getName().partition("@")[0])
 				self.msgContent = self.msg.getContent()
 				print self.msgContent # THIS IS A FU***** STRING
-				# ([79, 1], 2, <StorageAgent(storage1@127.0.0.1, started 139843090052864)>)
 				negParam1 = self.msgContent.partition("[")[2].partition("]")[0]
 				negParam1 = list(eval(negParam1)) # convert list representation in string to actual list
 				negParam2 = int(self.msgContent.partition("]")[2].partition("<")[0].replace(", ", ""))
 				negParam3 = self.msgContent.partition("<")[1] + self.msgContent.partition("<")[2].partition(">")[0] + self.msgContent.partition(">")[1]
 				initiator = self.msg.getSender().getName()
-				#~ print negParam1
-				#~ print negParam2
-				#~ print negParam3
-				#~ print initiator
 				self.myAgent.selling(negParam1, negParam2, initiator)
 				
-				
-
-						
+										
 	class receiveFreebies(EventBehaviour):
 		def _process(self):
 			self.msg = None
@@ -403,8 +384,6 @@ class StorageAgent( TalkingAgent, Storage ):
 				self.msgContent = self.msg.getContent()
 				print self.msgContent
 				freebie = int(self.msgContent)
-				#~ print type(freebie)
-				#~ print freebie
 				
 				if freebie > 0: #incoming give proposal from Alice to Bob
 					reply = self.myAgent.acceptResources(freebie)
@@ -493,7 +472,6 @@ class StorageAgent( TalkingAgent, Storage ):
 
 	def currentReqs(self): # adds up all the current resource requests of currently ACTIVE agents
 		
-		#~ print "Entering currentReqs"
 		totalReqs = 0
 
 		for c in self.myAgents:
@@ -727,7 +705,6 @@ class StorageAgent( TalkingAgent, Storage ):
 		print(" SELLER %s > My CRL: %f" %(self.name, self.currentResourceLevel))
 		print(" SELLER %s > Max quantity for spare: %f" %(self.name, maxQ))
 
-		#print (buyer_received_offer)
 
 		if timer >= self.negTimerMax:
 			print(" SELLER %s > Time limit exceeded, exciting negotiations now." %(self.name))
@@ -1263,7 +1240,6 @@ class Consumer( Changer ):
 				print int(self.msgContent)
 				
 				economyAnswer = self.myAgent.changeMode()
-				#~ print "\Answer from <changeMode> method: %d" %economyAnswer
 				
 				if economyAnswer == 0: #incoming give proposal from Alice to Bob
 					print ("\n * Sorry, economy not possible for unit: %s." %self.myAgent.name)
@@ -1381,8 +1357,6 @@ class Consumer( Changer ):
 			print (" ------ MY CAPACITY: %f" %self.capacity[timer-1])
 			print (" ------ NEW RESOURCE LEVEL for %s: %f" %(myStorage.storageName, myStorage.currentResourceLevel))
 
-	
-
 
 class Producer( Changer ):
 	''' A producer in a settlement '''
@@ -1390,7 +1364,6 @@ class Producer( Changer ):
 	def __init__(self, name, priority, capacity, workStart, workStop, belongsTo, eFactor, *args, **kwargs):
 		TalkingAgent.__init__(self, *args, **kwargs)
 		Changer.__init__(self, name, priority, capacity, workStart, workStop, belongsTo, eFactor)
-		#print "PRODUCER %s __init__" %self.changerName
 		self.sending = None
 	
 	
@@ -1410,7 +1383,6 @@ class Producer( Changer ):
 	class sendingMessage(OneShotBehaviour):
 		
 		def _process(self):
-			#print "\n\nEntering sendingMessage _process\n\n"
 			msg = ACLMessage()
 			msg.setPerformative("inform")
 			msg.setLanguage( "English" )
@@ -1424,14 +1396,7 @@ class Producer( Changer ):
 		
 	def _setup( self ):
 		print "PRODUCER %s enter _setup..." %self.changerName
-		#~ template = ACLTemplate()
-		#~ template.setSender(aid("Producer1@127.0.0.1",["xmpp://Producer1@127.0.0.1"]))
-		#~ t = MessageTemplate(template)
 		self.addBehaviour(self.sendingMessage())
-		
-		#~ sm = sendMessage() # calling these two lines when sending messages from within the agent does not work
-		#~ self.addBehaviour(sm, None) #
-		
 		
 
 observer = Observer()
