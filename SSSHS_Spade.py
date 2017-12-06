@@ -74,8 +74,7 @@ def startSimulation():
 
 		if timer == sim_time:
 			timer = 1
-			exit()
-			#~ observer.report()
+			observer.report()
 
 		else:
 			timer += 1
@@ -162,6 +161,48 @@ class Observer:
 			print(" ---- My agents working in economy mode: %s " %s.agentsInEconomy)
 
 
+	def report (self):
+
+		totalInterventions = economyRequests + delayRequests + restoreEconomyRequests + advanceRequests + giveRequests + negotiationRequests
+
+		global Overflow
+		for s in storages:
+			Overflow += s.ResourceLoss
+
+		print ("\n\n .... [ END OF SIMULATION ] ....")
+		print ("\n\n ******* Number of system interventions: %d" %totalInterventions)
+		print (" *********** First intervention happened at time: %d" %firstIntervention)
+
+		print ("\n\n ******* Number of LT ALERTS: %d" %LTalerts)
+		print ("\n *********** Number of DELAY  requests: %d" %delayRequests)
+		print (" *********** Number of ECONOMY requests: %d" %economyRequests)
+		print (" *********** Number of NEGOTIATION requests: %d" %negotiationRequests)
+
+		print ("\n\n ******* Number of UT ALERTS: %d" %UTalerts)
+		print ("\n *********** Number of RESTORE requests: %d" %restoreEconomyRequests)
+		print (" *********** Number of ADVANCE requests: %d" %advanceRequests)
+		print (" *********** Number of GIVE requests: %d" %giveRequests)
+		print (" *********** Overflow of resources: %f" %Overflow)
+
+		for s in storages:
+			print ("\n\nINDIVIDUAL REPORT FOR STORAGE %s" %s.name)
+			print (" - Capacity: %d" %(s.maxCapacity))
+			print (" - CRL: %d" %(s.currentResourceLevel))
+			print (" - UT alerts: %d" %(s.myUTalerts))
+			print (" - Advance reqs: %d" %(s.myAdvanceReqs))
+			print (" - Resources lost: %f" %s.ResourceLoss)
+			print (" - LT alerts: %d" %(s.myLTalerts))
+			print (" - Economy reqs: %d" %(s.myEconomyReqs))
+			print (" - Delay reqs: %d" %(s.myDelayReqs))
+			print ("CRL HISTORY: %s" %s.CRLhistory)
+			
+			plt.plot(s.CRLhistory)
+			plt.ylabel('some numbers')
+						
+			print ("OVERFLOW per time unit: %s" %s.overflowHistory)
+
+		exit()
+	
 	def _setup( self ):
 		''' Setup the agent's knowledge base '''
 		self.kb = KB()
