@@ -19,7 +19,7 @@ from spade.SWIKB import SWIKB as KB
 
 Overflow = 0.00
 
-sim_time = 3
+sim_time = 30
 callbacks = []
 timer = 1
 agents = []
@@ -43,6 +43,7 @@ giveRequests = 0
 negotiationRequests = 0
 UTalerts = 0 # upper threshold alerts
 LTalerts = 0 # lower threshold alerts
+messagesSent = 0 # total number of sent messages between agents
 
 
 def startSimulation():
@@ -168,10 +169,14 @@ class Observer:
 		global Overflow
 		for s in storages:
 			Overflow += s.ResourceLoss
+			
+		global messagesSent
 
 		print ("\n\n .... [ END OF SIMULATION ] ....")
 		print ("\n\n ******* Number of system interventions: %d" %totalInterventions)
 		print (" *********** First intervention happened at time: %d" %firstIntervention)
+		print (" *********** TOTAL MESSAGES SENT: %d" %messagesSent)
+		
 
 		print ("\n\n ******* Number of LT ALERTS: %d" %LTalerts)
 		print ("\n *********** Number of DELAY  requests: %d" %delayRequests)
@@ -285,6 +290,8 @@ class StorageAgent( TalkingAgent, Storage ):
 		msg.addReceiver( receiver )
 		msg.setContent( messageToSend )
 		self.send( msg )
+		global messagesSent 
+		messagesSent +=1
 		print "\n-- Storage %s is now sending message: %s to %s (ontology: %s) -->" %(self.storageName, msg.getContent(), messageReceiver, messageOntology)
 		
 
@@ -1225,6 +1232,7 @@ class Consumer( Changer ):
 					print "\n * Ok, delay possible for unit: %s." %self.myAgent.name			
 					print "\n<delay> result in %s: %d, sending reply to: %s" %(self.myAgent.name, delayAnswer, self.msg.getSender().getName().partition("@")[0])
 					self.myAgent.sendMessage(int(delayAnswer), self.msg.getSender().getName().partition("@")[0], "delay")	
+
 			else:
 				print "I waited, but no message for me."	
 	
@@ -1249,7 +1257,7 @@ class Consumer( Changer ):
 				else:
 					print "\n * Ok, economy possible for unit: %s." %self.myAgent.name			
 					print "\n<changeMode> result in %s: %d, sending reply to: %s" %(self.myAgent.name, economyAnswer, self.msg.getSender().getName().partition("@")[0])
-					self.myAgent.sendMessage(int(economyAnswer), self.msg.getSender().getName().partition("@")[0], "economy")	
+					self.myAgent.sendMessage(int(economyAnswer), self.msg.getSender().getName().partition("@")[0], "economy")
 			else:
 				print "I waited, but no message for me."	
 						
@@ -1318,6 +1326,8 @@ class Consumer( Changer ):
 		msg.addReceiver(receiver)
 		msg.setContent(messageToSend)
 		self.send(msg)
+		global messagesSent 
+		messagesSent +=1
 		print "\n-- Consumer %s is now sending message: %s to %s (ontology: %s) -->" %(self.name, msg.getContent(), messageReceiver, messageOntology)
 
 
@@ -1391,6 +1401,8 @@ class Producer( Changer ):
 			msg.addReceiver(receiver)
 			msg.setContent("TEST message from producer")
 			self.myAgent.send(msg)
+			global messagesSent 
+			messagesSent +=1
 			print msg.getContent()
 
 		
@@ -1427,7 +1439,7 @@ if __name__ == '__main__':
 	negTimerMax = 1000
 	worth = 100000
 
-	# ------------------- HOUSE 1
+
 
 	 # storage parameters: name, crl, maxCapacity, lower threshold, upper threshold, transfer costs, acceptable transfer cost value, resource ID
 
@@ -1450,6 +1462,11 @@ if __name__ == '__main__':
 	 # residents collecting water with 20-liter canisters:
 	productionDistribution2 = [0,0,40,0,0,40,60,60,60,60,60,60,0,0,0,60,60,60,60,0,60,40,20,0,60,60,0,60,60,60]
 	producer2 = Producer ("HANDWORK-U1", 1, productionDistribution2, 1, 30, storages[0], 1, "producer2@127.0.0.1", "secret")
+	producer2.start()
+	
+	productionDistribution3 = [63.75,712.5,0,86.25,71.25,0,11.25,0,0,0,0,0,626.25,1372.5,243.75,0,0,0,0,1091.25,0,0,0,0,93.75,0,0,468.75,161.25,0,0]
+	producer3 = Producer ("RAINFALL-U2", 1, productionDistribution3, 1, 30, storages[1], 1, "producer3@127.0.0.1", "secret")
+	producer3.start()
 
 	 # 50 lit of water per human per day
 	consumptionDistribution1 = [-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50]
@@ -1459,7 +1476,37 @@ if __name__ == '__main__':
 	cunsumer2 = Consumer ("Person2-U1", 10, consumptionDistribution1, 1, 30, storages[0], 0.5, "consumer2@127.0.0.1", "secret")
 	cunsumer2.start()
 	
-	storage1.agentsInEconomy.append(cunsumer1) # for testing purposes only, delete before deployment
+	cunsumer3 = Consumer ("Person3-U1", 10, consumptionDistribution1, 1, 30, storages[0], 0.5, "consumer3@127.0.0.1", "secret")
+	cunsumer3.start()
+	
+	cunsumer4 = Consumer ("Person4-U1", 10, consumptionDistribution1, 1, 30, storages[0], 0.5, "consumer4@127.0.0.1", "secret")
+	cunsumer4.start()
+	
+	 # irrigation in the dry days
+	consumptionDistribution5 = [0,0,0,0,0,0,0,0,0,0,-300,0,0,0,0,0,0,-300,0,0,0,0,-300,0,0,0,0,0,0,0]
+	cunsumer11 = Consumer ("IRRIGATION-U2", 2, consumptionDistribution5, 1, 30, storages[1], 0.2, "consumer11@127.0.0.1", "secret")
+	cunsumer11.start()
+	
+	 # various (semi-random)
+	consumptionDistribution6 = [-1,-1,-2,0,-1,0,0,0,-1,-6,0,-1,-1,0,-2,0,0,-12,0,-1,-1,-8,-2,-3,0,-7,0,-2,-5,-1]
+	cunsumer12 = Consumer ("VA-U2", 1, consumptionDistribution6, 1, 30, storages[1], 0.1, "consumer12@127.0.0.1", "secret")
+	cunsumer12.start()
+	
+	productionDistribution5 = [91.8,1026,0,124.2,102.6,0,16.2,0,0,0,0,0,901.8,1976.4,351,0,0,0,0,1571.4,0,0,0,0,135,0,0,675,232.2,0,0]
+	producer5 = Producer ("RAINFALL-U3", 1, productionDistribution5, 1, 30, storages[2], 1, "producer5@127.0.0.1", "secret")
+	producer5.start()
+	
+	 # 50 lit of water per human per day
+	consumptionDistribution7 = [-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50,-50]
+	cunsumer13 = Consumer ("Person1-U3", 10, consumptionDistribution7, 1, 30, storages[2], 0.5, "consumer13@127.0.0.1", "secret")
+	cunsumer13.start()
+	
+	 # irrigation in the dry days
+	consumptionDistribution8 = [0,0,0,0,0,0,0,0,0,-300,0,-300,0,0,0,0,-300,0,-300,0,0,0,-300,0,0,0,0,0,0,0]
+	cunsumer15 = Consumer ("IRRIGATION-U3", 2, consumptionDistribution8, 1, 30, storages[2], 0.3, "consumer15@127.0.0.1", "secret")
+	cunsumer15.start()
+	
+	#~ storage1.agentsInEconomy.append(cunsumer1) # for testing purposes only, delete before deployment
 	
 
 
